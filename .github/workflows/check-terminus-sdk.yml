@@ -1,0 +1,64 @@
+name: Check Terminus SDK availability
+
+on:
+  schedule:
+    - cron: "17 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the CLI-required SDK range
+        id: sdk
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm view @terminus-ai/sdk versions --json >/dev/null
+          if versions="$(npm view '@terminus-ai/sdk@~0.0.1' version --json 2>/dev/null)"; then
+            status=available
+            {
+              echo "## Terminus SDK availability"
+              echo
+              echo "A version matching \`@terminus-ai/sdk@~0.0.1\` is published:"
+              echo
+              echo '```json'
+              echo "$versions"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            status=unavailable
+            {
+              echo "## Terminus SDK availability"
+              echo
+              echo "No published version currently matches \`@terminus-ai/sdk@~0.0.1\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+
+      - name: Open an issue when the SDK becomes available
+        if: steps.sdk.outputs.status == 'available'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          marker="<!-- terminus-sdk-availability -->"
+          existing="$(gh issue list --state all --limit 100 --json body --jq "[.[] | select(.body | contains(\"$marker\"))] | length")"
+          if [[ "$existing" == "0" ]]; then
+            gh issue create \
+              --title "Terminus SDK is available on npm" \
+              --body "$marker
+
+          npm now publishes a version matching \`@terminus-ai/sdk@~0.0.1\`.
+
+          Re-run app install, typecheck, build, and the Terminus dry-run before deployment."
+          fi
