@@ -24,6 +24,8 @@ The app starts with an empty list. Keep any personal seed data in `app/src/seed.
 
 The **Check Terminus SDK availability** GitHub Actions workflow checks the required npm version range daily and can also be started manually. When a matching version appears, it opens a single GitHub issue as an alert.
 
+GitHub-hosted runners are generally free for public repositories, but account-level billing locks can still prevent jobs from starting. If a run fails before its first step with a billing-lock message, resolve the lock in GitHub billing settings; changing this workflow will not bypass it.
+
 To push either component, first sign in with `terminus login`, then register a new creation with `terminus create <name> .` or link an existing one with `terminus link <name>`. Signing in alone does not register or link a project.
 
 The recovered product prices are starting data, not verified live prices. Confirm offers and target prices before relying on alerts.
